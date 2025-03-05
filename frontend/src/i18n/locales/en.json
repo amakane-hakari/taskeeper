@@ -1,0 +1,10 @@
+{
+  "app.title": "TaskKeeper",
+  "app.header.dashboard": "Dashboard",
+  "counter.value": "Current value: {value}",
+  "counter.button.increment": "Increment",
+  "counter.button.decrement": "Decrement",
+  "counter.button.incrementAsync": "Increment Async",
+  "counter.button.decrementAsync": "Decrement Async",
+  "counter.loading": "Loading..."
+}

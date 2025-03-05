@@ -1,0 +1,10 @@
+{
+  "app.title": "タスクキーパー",
+  "app.header.dashboard": "ダッシュボード",
+  "counter.value": "現在の値: {value}",
+  "counter.button.increment": "増加",
+  "counter.button.decrement": "減少",
+  "counter.button.incrementAsync": "非同期増加",
+  "counter.button.decrementAsync": "非同期減少",
+  "counter.loading": "読み込み中..."
+}

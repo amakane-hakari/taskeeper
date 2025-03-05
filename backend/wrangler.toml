@@ -1,0 +1,11 @@
+name = "taskeeper-backend"
+main = "src/index.ts"
+compatibility_date = "2024-03-03"
+
+[vars]
+ENV = "development"
+
+[[kv_namespaces]]
+binding = "TASKS_STORE"
+id = "861cb1d2035040499d6250231f21f8fb"
+preview_id = "3b5c510ec1e943cc9e5bb92c3f96418f"
