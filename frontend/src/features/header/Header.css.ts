@@ -10,7 +10,7 @@ export const header = style({
 export const logoContainer = style({
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '1rem',
+  padding: '1rem 0.5rem',
   width: '200px',
   color: vars.colors.text,
   fontSize: '1.5rem',
@@ -27,6 +27,7 @@ export const logo = style({
   borderColor: vars.colors.primary,
   borderRadius: '1.5rem',
   fontSize: '1.5rem',
+  fontFamily: '"Cooper Black", serif',
   textAlign: 'center',
   overflow: 'hidden',
 });
