@@ -2,13 +2,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { increment, decrement, incrementAsync, decrementAsync } from './counterSlice';
 import { FormattedMessage } from 'react-intl';
-import { AVAILABLE_LOCALES } from '../../i18n/config';
-import { selectLocale, setLocale } from '../ui/uiSlice';
 
 const Counter = () => {
   const dispatch = useDispatch();
   const { value, loading } = useSelector((state: RootState) => state.counter);
-  const currentLocale = useSelector(selectLocale);
 
   return (
     <div>
