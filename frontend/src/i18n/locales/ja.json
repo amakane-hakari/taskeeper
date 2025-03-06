@@ -1,6 +1,8 @@
 {
-  "app.title": "タスクキーパー",
+  "app.title": "タスキーパー",
   "app.header.dashboard": "ダッシュボード",
+  "navigation.dashboard": "ダッシュボード",
+  "navigation.taskList": "タスク一覧",
   "counter.value": "現在の値: {value}",
   "counter.button.increment": "増加",
   "counter.button.decrement": "減少",

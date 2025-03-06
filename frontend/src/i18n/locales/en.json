@@ -1,6 +1,8 @@
 {
-  "app.title": "TaskKeeper",
+  "app.title": "Taskeeper",
   "app.header.dashboard": "Dashboard",
+  "navigation.dashboard": "Dashboard",
+  "navigation.taskList": "Task List",
   "counter.value": "Current value: {value}",
   "counter.button.increment": "Increment",
   "counter.button.decrement": "Decrement",
