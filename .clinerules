@@ -1,0 +1,104 @@
+# プロジェクト構成
+
+バックエンドはHonoを使用しておりWranglerを使用して開発しています。
+フロントエンドはReact+Redux toolkitを使用して開発しています。
+
+## フロントエンド
+
+### ディレクトリ構成
+
+```
+src
+├── components # 汎用コンポーネント(Redux非依存)
+│   └── <component-name>
+│       ├── stories
+│       │   └── <component-name>.stories.tsx
+│       ├── <component-name>.tsx
+│       ├── <component-name>.css.ts
+│       ├── <component-name>.test.tsx
+│       └── index.ts # エクスポートファイル
+├── features # 機能コンポーネント(Redux依存あり)
+│   └── <feature-name>
+│       ├── hooks
+│       │   └── use<feature-name>.ts # カスタムフック(主にRedux依存のロジックを分離)
+│       ├── stories
+│       │   └── <feature-name>.stories.tsx
+│       ├── <feature-name>Slice.ts
+│       ├── <feature-name>Saga.ts
+│       ├── <feature-name>.test.ts
+│       ├── layout # レイアウトコンポーネント
+│       │   └── <feature-name>Layout.tsx
+│       └── ui # UI状態変更コンポーネント
+│           └── <feature-name>.tsx
+├── i18n # 多言語化
+│   ├── en.json
+│   └── ja.json
+├── store # Reduxの設定
+│   └── index.ts
+├── styles # 共通スタイル
+└── utils # ユーティリティ(可能な限り使わないようにする)
+```
+
+### コーディング規約
+
+- コンポーネントは関数コンポーネントを使用する
+- コンポーネントはRedux非依存のコンポーネントとRedux依存のコンポーネントに分ける
+- Reduxのsliceはfeaturesディレクトリに配置する
+- ReduxのsliceはcreateSliceを使用する
+- バックエンドとの通信はRTK Queryを使用する
+- redux-sagaはサーバーデータの取得には使用せず、その他の非同期処理・副作用の分離のために使用する
+- テストはvitestを使用する
+
+## バックエンド
+
+### ディレクトリ構成
+
+```
+src
+├── routes # ルーター
+│   └── <route-name>
+│       ├── __tests__
+│       │   └── <route-name>.test.ts
+│       ├── <route-name>.ts
+│       └── index.ts
+├── domains # ドメイン(ビジネスロジック)
+│   └── <domain-name>
+│       ├── __tests__
+│       │   └── <domain-name>.test.ts
+│       ├── <domain-name>.ts
+│       └── index.ts
+├── infrastructures # インフラストラクチャ(外部APIとのやり取り)
+│   └── <infrastructure-name>
+│       ├── <infrastructure-name>.ts
+│       └── index.ts
+├── repositories # リポジトリ(データベースとのやり取り)
+│   └── <repository-name>
+│       ├── <repository-name>.ts
+│       └── index.ts
+└── index.ts # Honoの設定
+```
+
+### コーディング規約
+
+- ルーターはroutersディレクトリに配置する
+- ドメインはdomainsディレクトリに配置する
+- インフラストラクチャはinfrastructuresディレクトリに配置する
+- リポジトリはrepositoriesディレクトリに配置する
+- テストはvitestを使用する
+
+
+### 制約制約
+
+- バックエンドはHonoを使用して開発する
+- バックエンドのデプロイ先はCloudflare workersを使用する
+  - Cloudflare workersの制約により、バックエンドはTypeScriptで記述する
+  - Cloudflare workersの制約により、リクエストスコープ内で処理が完結すること
+  - 永続化が必要な場合はCloudflareの提供するKVやDurable Objects、D1などを使用する
+
+### テスト
+
+- テストはvitestを使用する
+- テストは各ディレクトリに配置する
+- テストはファイル名に`.test.ts`を付ける
+- テストは`npm test`コマンドで実行する
+- 実装前にテストを書いてから実装する
