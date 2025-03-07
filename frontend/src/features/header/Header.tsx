@@ -1,4 +1,4 @@
-import { ThemeToggle } from '@/components/settings/ThemeToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { AVAILABLE_LOCALES } from '@/i18n/config';
 import React from 'react';
 import { selectLocale, setLocale } from '@/features/ui/uiSlice';

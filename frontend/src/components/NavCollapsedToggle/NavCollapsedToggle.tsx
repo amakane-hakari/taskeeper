@@ -2,12 +2,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAnglesRight, faAnglesLeft } from '@fortawesome/free-solid-svg-icons';
 import * as styles from './NavCollapsedToggle.css';
 
-interface NavCollapsedToggleProp {
+export interface NavCollapsedToggleProps {
   navCollapsed: boolean;
   toggleNavCollapsed: () => void;
 }
 
-export const NavCollapsedToggle: React.FC<NavCollapsedToggleProp> = ({
+export const NavCollapsedToggle: React.FC<NavCollapsedToggleProps> = ({
   navCollapsed,
   toggleNavCollapsed,
 }) => {

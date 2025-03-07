@@ -3,7 +3,7 @@ import * as styles from './ThemeToggle.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
 
-interface ThemeToggleProps {
+export interface ThemeToggleProps {
   theme: 'light' | 'dark';
   onToggle: () => void;
   className?: string;

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { routes } from '@/router/constants';
 import * as styles from './Navigation.css';
 import { useNavCollapse } from '@/features/ui/hooks/useNavCollapse';
-import { NavCollapsedToggle } from '@/components/settings/NavCollapsedToggle';
+import { NavCollapsedToggle } from '@/components/NavCollapsedToggle';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGauge, faListCheck, faStopwatch20, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FormattedMessage } from 'react-intl';

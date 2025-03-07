@@ -1,7 +1,7 @@
 import React from 'react';
 import * as styles from './CardList.css';
 
-interface CardListProps {
+export interface CardListProps {
   children?: React.ReactNode;
 };
 
