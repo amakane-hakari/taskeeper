@@ -1,104 +1,178 @@
-# プロジェクト構成
+# プロジェクト概要
 
-バックエンドはHonoを使用しておりWranglerを使用して開発しています。
-フロントエンドはReact+Redux toolkitを使用して開発しています。
+Taskeeperは、タスク管理のためのWebアプリケーションです。
+
+## 開発手順
+
+- テスト駆動開発（TDD）を採用
+- Red-Green-Refactorのサイクルを厳守する
+
+## アーキテクチャ
+
+### 全体構成
+
+- フロントエンド：React + Redux Toolkit + TypeScript
+- バックエンド：Hono + TypeScript on Cloudflare Workers
+- 開発環境：Vite + Wrangler
+
+### アーキテクチャ原則
+
+1. クリーンアーキテクチャの採用
+   - 依存関係の方向は外から内へ（UI → ドメイン）
+   - ドメインは外部の実装詳細に依存しない
+
+2. 例外処理の考え方
+   - 例外はドメイン層で処理
+   - Result型を使用して成功/失敗を表現
+   - エラーは例外ではなく値として扱う
+   - エラー処理はドメイン層で完結
+   - エラーはドメイン固有の型で表現
+
+3. フロントエンドアーキテクチャ
+   - Atomic Designベース
+   - Presentational/Container分離
+   - 状態管理はRedux Toolkitに集中
+
+4. バックエンドアーキテクチャ
+   - レイヤードアーキテクチャ
+   - ドメイン駆動設計の考え方を採用
+   - EdgeコンピューティングのベストプラクティスFollowing
 
 ## フロントエンド
 
 ### ディレクトリ構成
 
 ```
-src
-├── components # 汎用コンポーネント(Redux非依存)
-│   └── <component-name>
-│       ├── stories
+src/
+├── components/     # 汎用コンポーネント（Redux非依存）
+│   └── <component-name>/
+│       ├── stories/           # Storybookストーリー
 │       │   └── <component-name>.stories.tsx
-│       ├── <component-name>.tsx
-│       ├── <component-name>.css.ts
-│       ├── <component-name>.test.tsx
-│       └── index.ts # エクスポートファイル
-├── features # 機能コンポーネント(Redux依存あり)
-│   └── <feature-name>
-│       ├── hooks
-│       │   └── use<feature-name>.ts # カスタムフック(主にRedux依存のロジックを分離)
-│       ├── stories
+│       ├── <component-name>.tsx      # コンポーネント実装
+│       ├── <component-name>.css.ts   # スタイル定義
+│       ├── <component-name>.test.tsx # テストコード
+│       └── index.ts                  # Public API
+│
+├── features/       # 機能コンポーネント（Redux依存あり）
+│   └── <feature-name>/
+│       ├── hooks/            # カスタムフック
+│       │   └── use<feature-name>.ts
+│       ├── stories/          # Storybookストーリー
 │       │   └── <feature-name>.stories.tsx
-│       ├── <feature-name>Slice.ts
-│       ├── <feature-name>Saga.ts
-│       ├── <feature-name>.test.ts
-│       ├── layout # レイアウトコンポーネント
+│       ├── <feature-name>Slice.ts   # Redux状態・ロジック
+│       ├── <feature-name>Saga.ts    # 副作用管理
+│       ├── <feature-name>.test.ts   # テストコード
+│       ├── layout/                  # レイアウト
 │       │   └── <feature-name>Layout.tsx
-│       └── ui # UI状態変更コンポーネント
+│       └── ui/                      # UIコンポーネント
 │           └── <feature-name>.tsx
-├── i18n # 多言語化
-│   ├── en.json
-│   └── ja.json
-├── store # Reduxの設定
-│   └── index.ts
-├── styles # 共通スタイル
-└── utils # ユーティリティ(可能な限り使わないようにする)
+│
+├── i18n/          # 多言語化
+│   ├── config.ts  # i18n設定
+│   └── locales/   # 言語リソース
+│       ├── en.json
+│       └── ja.json
+│
+├── store/         # Redux設定
+│   ├── index.ts   # ストア設定
+│   └── rootSaga.ts  # Saga統合
+│
+├── styles/        # グローバルスタイル
+│   └── theme.css.ts  # テーマ定義
+│
+└── utils/         # ユーティリティ
+    └── types/     # 型定義
+
 ```
 
 ### コーディング規約
 
-- コンポーネントは関数コンポーネントを使用する
-- コンポーネントはRedux非依存のコンポーネントとRedux依存のコンポーネントに分ける
-- Reduxのsliceはfeaturesディレクトリに配置する
-- ReduxのsliceはcreateSliceを使用する
-- バックエンドとの通信はRTK Queryを使用する
-- redux-sagaはサーバーデータの取得には使用せず、その他の非同期処理・副作用の分離のために使用する
-- テストはvitestを使用する
+#### コンポーネント
+- 関数コンポーネントのみ使用
+- Props型は明示的に定義
+- コンポーネントファイル名はPascalCase
+- styled-componentsのスタイル定義は別ファイル（.css.ts）に分離
+
+#### 状態管理
+- グローバル状態はRedux Toolkit
+- ローカル状態はuseState/useReducer
+- 非同期処理はRTK QueryまたはRedux Saga
+  - APIリクエスト → RTK Query
+  - その他の副作用 → Redux Saga
+
+#### テスト
+- ユニットテスト：Vitest
+- コンポーネントテスト：React Testing Library
+- E2Eテスト：Playwright
+- カバレッジ目標：80%以上
 
 ## バックエンド
 
 ### ディレクトリ構成
 
 ```
-src
-├── routes # ルーター
-│   └── <route-name>
-│       ├── __tests__
+src/
+├── routes/        # ルーティング
+│   └── <route-name>/
+│       ├── __tests__/
 │       │   └── <route-name>.test.ts
-│       ├── <route-name>.ts
-│       └── index.ts
-├── domains # ドメイン(ビジネスロジック)
-│   └── <domain-name>
-│       ├── __tests__
+│       ├── <route-name>.ts   # ルートハンドラ
+│       └── index.ts          # Public API
+│
+├── domains/       # ドメインロジック
+│   └── <domain-name>/
+│       ├── __tests__/
 │       │   └── <domain-name>.test.ts
-│       ├── <domain-name>.ts
-│       └── index.ts
-├── infrastructures # インフラストラクチャ(外部APIとのやり取り)
-│   └── <infrastructure-name>
+│       ├── types.ts          # 型定義
+│       ├── <domain-name>.ts  # ドメインロジック
+│       └── index.ts          # Public API
+│
+├── infrastructures/  # 外部サービス連携
+│   └── <infrastructure-name>/
+│       ├── types.ts
 │       ├── <infrastructure-name>.ts
 │       └── index.ts
-├── repositories # リポジトリ(データベースとのやり取り)
-│   └── <repository-name>
+│
+├── repositories/    # データアクセス
+│   └── <repository-name>/
+│       ├── types.ts
 │       ├── <repository-name>.ts
 │       └── index.ts
-└── index.ts # Honoの設定
+│
+└── index.ts        # アプリケーションのエントリーポイント
 ```
 
 ### コーディング規約
 
-- ルーターはroutersディレクトリに配置する
-- ドメインはdomainsディレクトリに配置する
-- インフラストラクチャはinfrastructuresディレクトリに配置する
-- リポジトリはrepositoriesディレクトリに配置する
-- テストはvitestを使用する
+#### 一般
+- 型安全性を重視：`strict: true`
+- 依存関係は明示的に注入
+- 可能な限りTypeScriptのclass構文を用いない
+- エラーは適切に型付けして伝播
+- 副作用は最外層に限定
 
+#### レイヤー別規約
+- Routes：リクエスト/レスポンスの変換に専念
+- Domains：ビジネスロジックの中核
+- Repositories：データアクセスの抽象化
+- Infrastructures：外部サービスとの統合
 
-### 制約制約
+### 制約事項
 
-- バックエンドはHonoを使用して開発する
-- バックエンドのデプロイ先はCloudflare workersを使用する
-  - Cloudflare workersの制約により、バックエンドはTypeScriptで記述する
-  - Cloudflare workersの制約により、リクエストスコープ内で処理が完結すること
-  - 永続化が必要な場合はCloudflareの提供するKVやDurable Objects、D1などを使用する
+#### Vitest
 
-### テスト
+- 実行時は`npm run test:run`で実行
 
-- テストはvitestを使用する
-- テストは各ディレクトリに配置する
-- テストはファイル名に`.test.ts`を付ける
-- テストは`npm test`コマンドで実行する
-- 実装前にテストを書いてから実装する
+#### Cloudflare Workers
+- リクエストスコープでの処理完結
+- コールドスタート対策
+- メモリ制限：128MB
+- CPU時間：10ms～50ms
+- 永続化はCloudflareサービスを使用
+  - KV：キーバリューストア
+  - D1：SQLiteベースのデータベース
+  - Durable Objects：分散状態管理
+
+## clinerulesを読んだことを宣言
+
+- 「.clinerulesを読んだことを宣言します」をタスクの最初に必ず記載すること

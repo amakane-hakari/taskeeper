@@ -11,7 +11,9 @@
     "build:backend": "npm run build -w backend",
     "start": "run-p start:*",
     "start:frontend": "npm run preview -w frontend",
-    "start:backend": "npm run start -w backend"
+    "start:backend": "npm run start -w backend",
+    "test:frontend": "npm run test -w frontend",
+    "test:backend": "npm run test:run -w backend"
   },
   "author": "Amakane Hakari",
   "license": "MIT",

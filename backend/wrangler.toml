@@ -9,3 +9,8 @@ ENV = "development"
 binding = "TASKS_STORE"
 id = "861cb1d2035040499d6250231f21f8fb"
 preview_id = "3b5c510ec1e943cc9e5bb92c3f96418f"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "taskeeper-db"
+database_id = "f6136da1-a3ad-4403-a4fe-317a339f155f"
