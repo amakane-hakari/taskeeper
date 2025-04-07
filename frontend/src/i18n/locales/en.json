@@ -3,10 +3,18 @@
   "app.header.dashboard": "Dashboard",
   "navigation.dashboard": "Dashboard",
   "navigation.taskList": "Task List",
+  "navigation.taskCreate": "Create Task",
   "counter.value": "Current value: {value}",
   "counter.button.increment": "Increment",
   "counter.button.decrement": "Decrement",
   "counter.button.incrementAsync": "Increment Async",
   "counter.button.decrementAsync": "Decrement Async",
-  "counter.loading": "Loading..."
+  "counter.loading": "Loading...",
+  "taskList.loading": "Loading...",
+  "taskList.empty": "No tasks found",
+  "taskList.error": "Failed to fetch tasks",
+  "taskList.task.createdAt": "Created at: {date}",
+  "taskList.task.status": "Status",
+  "taskList.task.status.completed": "Completed",
+  "taskList.task.status.incomplete": "Incomplete"
 }

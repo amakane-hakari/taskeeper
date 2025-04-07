@@ -41,6 +41,13 @@ export const Navigation: React.FC = () => {
           </Link>
         </li>
         <li className={styles.navItem}>
+          <Link className={styles.link} to={routes.taskCreate}>
+            <NavHider icon={faListCheck}>
+              <FormattedMessage id="navigation.taskCreate" />
+            </NavHider>
+          </Link>
+        </li>
+        <li className={styles.navItem}>
           <Link className={styles.link} to={routes.counter}>
             <NavHider icon={faStopwatch20}>カウンター</NavHider>
           </Link>
