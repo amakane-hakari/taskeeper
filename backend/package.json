@@ -11,7 +11,10 @@
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "wrangler d1 migrations apply DB",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +38,6 @@
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.26.0",
     "vitest": "^3.0.8",
-    "wrangler": "^3.28.1"
+    "wrangler": "^4.6.0"
   }
 }

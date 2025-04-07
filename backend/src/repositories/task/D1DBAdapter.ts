@@ -1,17 +1,9 @@
-import { Task, TaskStatus, TaskPriority } from '@/domains/task/types';
+import { Task } from '@/domains/task/types';
 import { IDBAdapter } from './IDBAdapter';
 import { D1Database } from '@cloudflare/workers-types';
-
-type D1TaskRecord = {
-  id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  createdAt: string;
-  updatedAt: string;
-};
+import { drizzle } from 'drizzle-orm/d1';
+import { eq } from 'drizzle-orm';
+import { tasks, type NewTask } from '@/schema';
 
 const convertDateToString = (date: Date): string => {
   return date.toISOString();
@@ -21,35 +13,33 @@ const convertStringToDate = (dateStr: string): Date => {
   return new Date(dateStr);
 };
 
-export const createD1DBAdapter = (db: D1Database): IDBAdapter => {
-  const insertTask = async (task: Task): Promise<void> => {
-    const stmt = db.prepare(`
-      INSERT INTO tasks (id, title, description, dueDate, status, priority, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+export const createD1DBAdapter = (d1db: D1Database): IDBAdapter => {
+  const db = drizzle(d1db);
 
-    await stmt
-      .bind(
-        task.id,
-        task.title,
-        task.description,
-        convertDateToString(task.dueDate),
-        task.status,
-        task.priority,
-        convertDateToString(task.createdAt),
-        convertDateToString(task.updatedAt)
-      )
-      .run();
+  const insertTask = async (task: Task): Promise<void> => {
+    const newTask: NewTask = {
+      id: task.id,
+      title: task.title,
+      description: task.description ?? '',  // デフォルト値を設定
+      dueDate: convertDateToString(task.dueDate),
+      status: task.status,
+      priority: task.priority,
+      createdAt: convertDateToString(task.createdAt),
+      updatedAt: convertDateToString(task.updatedAt),
+    };
+
+    await db.insert(tasks).values(newTask);
   };
 
   const findTaskById = async (id: string): Promise<Task | null> => {
-    const stmt = db.prepare('SELECT * FROM tasks WHERE id = ?').bind(id);
-    const row = await stmt.first<D1TaskRecord>();
-
-    if (!row) return null;
-
+    const result = await db.select().from(tasks).where(eq(tasks.id, id));
+    
+    if (result.length === 0) return null;
+    
+    const row = result[0];
     return {
       ...row,
+      description: row.description || undefined,  // 空文字列の場合はundefinedに変換
       dueDate: convertStringToDate(row.dueDate),
       createdAt: convertStringToDate(row.createdAt),
       updatedAt: convertStringToDate(row.updatedAt),
@@ -57,56 +47,32 @@ export const createD1DBAdapter = (db: D1Database): IDBAdapter => {
   };
 
   const updateTask = async (id: string, task: Partial<Task>): Promise<Task | null> => {
-    const currentTask = await findTaskById(id);
-    if (!currentTask) return null;
-
-    const updateFields = [];
-    const values = [];
+    const updateData: Partial<NewTask> = {};
     
-    if (task.title !== undefined) {
-      updateFields.push('title = ?');
-      values.push(task.title);
-    }
-    if (task.description !== undefined) {
-      updateFields.push('description = ?');
-      values.push(task.description);
-    }
-    if (task.dueDate !== undefined) {
-      updateFields.push('dueDate = ?');
-      values.push(convertDateToString(task.dueDate));
-    }
-    if (task.status !== undefined) {
-      updateFields.push('status = ?');
-      values.push(task.status);
-    }
-    if (task.priority !== undefined) {
-      updateFields.push('priority = ?');
-      values.push(task.priority);
-    }
+    if (task.title !== undefined) updateData.title = task.title;
+    if (task.description !== undefined) updateData.description = task.description;
+    if (task.dueDate !== undefined) updateData.dueDate = convertDateToString(task.dueDate);
+    if (task.status !== undefined) updateData.status = task.status;
+    if (task.priority !== undefined) updateData.priority = task.priority;
+    updateData.updatedAt = convertDateToString(new Date());
 
-    updateFields.push('updatedAt = ?');
-    values.push(convertDateToString(new Date()));
-    values.push(id);
+    await db.update(tasks)
+      .set(updateData)
+      .where(eq(tasks.id, id));
 
-    const stmt = db.prepare(`
-      UPDATE tasks
-      SET ${updateFields.join(', ')}
-      WHERE id = ?
-    `);
-
-    await stmt.bind(...values).run();
     return findTaskById(id);
   };
 
   const removeTask = async (id: string): Promise<void> => {
-    await db.prepare('DELETE FROM tasks WHERE id = ?').bind(id).run();
+    await db.delete(tasks).where(eq(tasks.id, id));
   };
 
   const listTasks = async (): Promise<Task[]> => {
-    const { results } = await db.prepare('SELECT * FROM tasks').all<D1TaskRecord>();
-
-    return results.map(row => ({
+    const rows = await db.select().from(tasks);
+    
+    return rows.map(row => ({
       ...row,
+      description: row.description || undefined,  // 空文字列の場合はundefinedに変換
       dueDate: convertStringToDate(row.dueDate),
       createdAt: convertStringToDate(row.createdAt),
       updatedAt: convertStringToDate(row.updatedAt),

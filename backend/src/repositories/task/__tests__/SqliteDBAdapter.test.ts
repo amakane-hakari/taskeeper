@@ -14,7 +14,7 @@ describe('SqliteDBAdapter', () => {
     updatedAt: new Date('2024-01-01'),
   };
 
-  it('should create and find a task', async () => {
+  it('タスクを作成して取得できること', async () => {
     const adapter = createSqliteDBAdapter();
     await adapter.insertTask(mockTask);
     
@@ -22,13 +22,13 @@ describe('SqliteDBAdapter', () => {
     expect(found).toEqual(mockTask);
   });
 
-  it('should return null for non-existent task', async () => {
+  it('存在しないタスクの場合はnullを返すこと', async () => {
     const adapter = createSqliteDBAdapter();
     const found = await adapter.findTaskById('non-existent');
     expect(found).toBeNull();
   });
 
-  it('should update a task', async () => {
+  it('タスクを更新できること', async () => {
     const adapter = createSqliteDBAdapter();
     await adapter.insertTask(mockTask);
 
@@ -44,7 +44,7 @@ describe('SqliteDBAdapter', () => {
     expect(updated?.description).toBe(mockTask.description);
   });
 
-  it('should return null when updating non-existent task', async () => {
+  it('存在しないタスクの更新時はnullを返すこと', async () => {
     const adapter = createSqliteDBAdapter();
     const update = { title: 'Updated Title' };
     
@@ -52,7 +52,7 @@ describe('SqliteDBAdapter', () => {
     expect(updated).toBeNull();
   });
 
-  it('should remove a task', async () => {
+  it('タスクを削除できること', async () => {
     const adapter = createSqliteDBAdapter();
     await adapter.insertTask(mockTask);
     
@@ -61,7 +61,7 @@ describe('SqliteDBAdapter', () => {
     expect(found).toBeNull();
   });
 
-  it('should list all tasks', async () => {
+  it('全てのタスクを一覧で取得できること', async () => {
     const adapter = createSqliteDBAdapter();
     const mockTask2 = { ...mockTask, id: '2' };
     
@@ -73,7 +73,7 @@ describe('SqliteDBAdapter', () => {
     expect(tasks).toEqual(expect.arrayContaining([mockTask, mockTask2]));
   });
 
-  it('should handle date conversions correctly', async () => {
+  it('日付の変換が正しく処理されること', async () => {
     const adapter = createSqliteDBAdapter();
     await adapter.insertTask(mockTask);
     

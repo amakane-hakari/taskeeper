@@ -8,7 +8,11 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.{test,spec}.ts'],
+      exclude: [
+        'src/**/*.{test,spec}.ts',
+        'src/test/**/*',
+        'src/infrastructure/db/schema.ts',
+      ],
     },
     environment: 'node',
     alias: {

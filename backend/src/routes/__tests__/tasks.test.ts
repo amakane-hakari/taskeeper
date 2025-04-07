@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Hono } from 'hono';
 import { createTasksRouter } from '../tasks';
 import { createMockTaskRepository } from '@/test/repositories/MockTaskRepository';
-import { Task, TaskNotFoundError } from '@/domains/task/types';
+import { Task, TaskNotFoundError, TaskStorageError } from '@/domains/task/types';
 import { Env, Variables, createDIMiddleware } from '@/di/container';
 import { Result } from '@/shared/Result';
 
@@ -35,7 +35,7 @@ describe('Tasks API', () => {
     app.route('/tasks', createTasksRouter());
   });
 
-    describe('GET /tasks', () => {
+  describe('GET /tasks', () => {
     it('タスク一覧を取得できること', async () => {
       const res = await app.request('/tasks');
       expect(res.status).toBe(200);
@@ -75,6 +75,18 @@ describe('Tasks API', () => {
       
       const data = await res.json() as ErrorResponse;
       expect(data.message).toBe('Internal Server Error');
+    });
+
+    it('ストレージエラーの場合はエラーメッセージを返すこと', async () => {
+      vi.spyOn(taskRepository, 'list').mockImplementation(() => 
+        Promise.resolve(Result.err(new TaskStorageError('Database connection failed')))
+      );
+      
+      const res = await app.request('/tasks');
+      expect(res.status).toBe(500);
+      
+      const data = await res.json() as ErrorResponse;
+      expect(data.message).toBe('Database connection failed');
     });
   });
 
@@ -117,6 +129,30 @@ describe('Tasks API', () => {
       const data = await res.json() as ErrorResponse;
       expect(data.message).toBe('Title is required');
     });
+
+    it('ストレージエラーの場合はエラーメッセージを返すこと', async () => {
+      const newTask = {
+        title: '新規タスク',
+        description: '新規タスクの説明',
+        dueDate: '2025-12-31T00:00:00.000Z',
+      };
+
+      vi.spyOn(taskRepository, 'create').mockImplementation(() =>
+        Promise.resolve(Result.err(new TaskStorageError('Failed to insert task')))
+      );
+
+      const res = await app.request('/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTask),
+      });
+
+      expect(res.status).toBe(500);
+      const data = await res.json() as ErrorResponse;
+      expect(data.message).toBe('Failed to insert task');
+    });
   });
 
   describe('DELETE /tasks/:id', () => {
@@ -139,6 +175,20 @@ describe('Tasks API', () => {
       expect(res.status).toBe(404);
       const data = await res.json() as ErrorResponse;
       expect(data.message).toBe('Task not found');
+    });
+
+    it('ストレージエラーの場合はエラーメッセージを返すこと', async () => {
+      vi.spyOn(taskRepository, 'remove').mockImplementation(() =>
+        Promise.resolve(Result.err(new TaskStorageError('Failed to delete task')))
+      );
+
+      const res = await app.request('/tasks/1', {
+        method: 'DELETE',
+      });
+
+      expect(res.status).toBe(500);
+      const data = await res.json() as ErrorResponse;
+      expect(data.message).toBe('Failed to delete task');
     });
   });
 });

@@ -1,8 +1,8 @@
 import { MiddlewareHandler } from "hono";
 import { D1Database } from "@cloudflare/workers-types";
-import { TaskRepository } from "../domains/task/types";
-import { createD1DBAdapter } from "../repositories/task/D1DBAdapter";
-import { createTaskRepository } from "../repositories/task";
+import { TaskRepository } from "@/domains/task/types";
+import { createD1DBAdapter } from "@/repositories/task/D1DBAdapter";
+import { createTaskRepository } from "@/repositories/task";
 
 export interface Env {
   DB: D1Database;

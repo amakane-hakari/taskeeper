@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createTaskRepository } from "../TaskRepository";
-import { CreateTaskDTO, Task } from "@/domains/task/types";
+import { CreateTaskDTO, Task, TaskStorageError, TaskValidationError } from "@/domains/task/types";
 import { IDBAdapter } from "../IDBAdapter";
+import { createTask } from "@/domains/task";
+import { Result } from "@/shared/Result";
+
+vi.mock("@/domains/task", () => ({
+  createTask: vi.fn(),
+}));
 
 const mockAdapter = {
   insertTask: vi.fn(),
@@ -17,13 +23,26 @@ describe("TaskRepository", () => {
   });
 
   describe("create", () => {
-    it("should create a new task", async () => {
+    it("新しいタスクを作成できること", async () => {
       const taskRepo = createTaskRepository(mockAdapter);
       const createDto: CreateTaskDTO = {
         title: "Test Task",
         description: "Test Description",
         dueDate: new Date("2025-12-31"),
       };
+
+      const mockTask: Task = {
+        id: "test-id",
+        title: createDto.title,
+        description: createDto.description,
+        dueDate: createDto.dueDate,
+        status: "not_started",
+        priority: "medium",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(createTask).mockReturnValue(Result.ok(mockTask));
 
       const result = await taskRepo.create(createDto);
       expect(result.isOk()).toBe(true);
@@ -39,10 +58,61 @@ describe("TaskRepository", () => {
         });
       }
     });
+
+    it("タスク作成時にバリデーションエラーが発生した場合はエラーを返すこと", async () => {
+      const taskRepo = createTaskRepository(mockAdapter);
+      const createDto: CreateTaskDTO = {
+        title: "",  // 無効なタイトル
+        description: "Test Description",
+        dueDate: new Date("2025-12-31"),
+      };
+
+      const mockError = new TaskValidationError("Title is required");
+      vi.mocked(createTask).mockReturnValue(Result.err(mockError));
+
+      const result = await taskRepo.create(createDto);
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBe(mockError);
+      }
+      expect(mockAdapter.insertTask).not.toHaveBeenCalled();
+    });
+
+    it("アダプターがエラーを投げた場合はTaskStorageErrorを返すこと", async () => {
+      const taskRepo = createTaskRepository(mockAdapter);
+      const createDto: CreateTaskDTO = {
+        title: "Test Task",
+        description: "Test Description",
+        dueDate: new Date("2025-12-31"),
+      };
+
+      const mockTask: Task = {
+        id: "test-id",
+        title: createDto.title,
+        description: createDto.description,
+        dueDate: createDto.dueDate,
+        status: "not_started",
+        priority: "medium",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      vi.mocked(createTask).mockReturnValue(Result.ok(mockTask));
+      mockAdapter.insertTask.mockRejectedValue(new Error("DB connection error"));
+
+      const result = await taskRepo.create(createDto);
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBeInstanceOf(TaskStorageError);
+        expect(error.message).toContain("Failed to create task");
+      }
+    });
   });
 
   describe("findById", () => {
-    it("should throw error if task is not found", async () => {
+    it("タスクが見つからない場合はエラーを返すこと", async () => {
       mockAdapter.findTaskById.mockResolvedValue(null);
       const taskRepo = createTaskRepository(mockAdapter);
 
@@ -55,7 +125,7 @@ describe("TaskRepository", () => {
       expect(mockAdapter.findTaskById).toHaveBeenCalledWith("non-existent-id");
     });
 
-    it("should return task if found", async () => {
+    it("タスクが存在する場合はそのタスクを返すこと", async () => {
       const mockTask: Task = {
         id: "test-id",
         title: "Test Task",
@@ -77,10 +147,23 @@ describe("TaskRepository", () => {
       }
       expect(mockAdapter.findTaskById).toHaveBeenCalledWith("test-id");
     });
+
+    it("アダプターがエラーを投げた場合はTaskStorageErrorを返すこと", async () => {
+      mockAdapter.findTaskById.mockRejectedValue(new Error("DB connection error"));
+      const taskRepo = createTaskRepository(mockAdapter);
+
+      const result = await taskRepo.findById("test-id");
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBeInstanceOf(TaskStorageError);
+        expect(error.message).toContain("Failed to fetch task");
+      }
+    });
   });
 
   describe("list", () => {
-    it("should return an array of tasks", async () => {
+    it("タスクの一覧を取得できること", async () => {
       const mockTasks: Task[] = [
         {
           id: "test-id-1",
@@ -114,6 +197,19 @@ describe("TaskRepository", () => {
       }
       expect(mockAdapter.listTasks).toHaveBeenCalledOnce();
     });
+
+    it("アダプターがエラーを投げた場合はTaskStorageErrorを返すこと", async () => {
+      mockAdapter.listTasks.mockRejectedValue(new Error("DB connection error"));
+      const taskRepo = createTaskRepository(mockAdapter);
+
+      const result = await taskRepo.list();
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBeInstanceOf(TaskStorageError);
+        expect(error.message).toContain("Failed to list tasks");
+      }
+    });
   });
 
   describe("update", () => {
@@ -128,7 +224,7 @@ describe("TaskRepository", () => {
       updatedAt: new Date("2025-01-01"),
     };
 
-    it("should update an existing task", async () => {
+    it("既存のタスクを更新できること", async () => {
       const updatedTask = {
         ...existingTask,
         title: "Updated Title",
@@ -151,7 +247,7 @@ describe("TaskRepository", () => {
       expect(mockAdapter.updateTask).toHaveBeenCalledOnce();
     });
 
-    it("should throw error if task not found", async () => {
+    it("タスクが見つからない場合はエラーを返すこと", async () => {
       mockAdapter.updateTask.mockResolvedValue(null);
       const taskRepo = createTaskRepository(mockAdapter);
 
@@ -162,10 +258,23 @@ describe("TaskRepository", () => {
         expect(error.message).toBe("Task with id non-existent-id not found");
       }
     });
+
+    it("アダプターがエラーを投げた場合はTaskStorageErrorを返すこと", async () => {
+      mockAdapter.updateTask.mockRejectedValue(new Error("DB connection error"));
+      const taskRepo = createTaskRepository(mockAdapter);
+
+      const result = await taskRepo.update("test-id", { title: "Updated Title" });
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBeInstanceOf(TaskStorageError);
+        expect(error.message).toContain("Failed to update task");
+      }
+    });
   });
 
   describe("remove", () => {
-    it("should remove an existing task", async () => {
+    it("既存のタスクを削除できること", async () => {
       const mockTask: Task = {
         id: "test-id",
         title: "Test Task",
@@ -186,7 +295,7 @@ describe("TaskRepository", () => {
       expect(mockAdapter.removeTask).toHaveBeenCalledWith("test-id");
     });
 
-    it("should throw error if task not found", async () => {
+    it("タスクが見つからない場合はエラーを返すこと", async () => {
       mockAdapter.findTaskById.mockResolvedValue(null);
       const taskRepo = createTaskRepository(mockAdapter);
 
@@ -199,6 +308,44 @@ describe("TaskRepository", () => {
       
       expect(mockAdapter.findTaskById).toHaveBeenCalledWith("non-existent-id");
       expect(mockAdapter.removeTask).not.toHaveBeenCalled();
+    });
+
+    it("検索時にアダプターがエラーを投げた場合はTaskStorageErrorを返すこと", async () => {
+      mockAdapter.findTaskById.mockRejectedValue(new Error("DB connection error"));
+      const taskRepo = createTaskRepository(mockAdapter);
+
+      const result = await taskRepo.remove("test-id");
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBeInstanceOf(TaskStorageError);
+        expect(error.message).toContain("Failed to delete task");
+      }
+    });
+
+    it("削除時にアダプターがエラーを投げた場合はTaskStorageErrorを返すこと", async () => {
+      const mockTask: Task = {
+        id: "test-id",
+        title: "Test Task",
+        description: "Test Description",
+        dueDate: new Date("2025-12-31"),
+        status: "not_started",
+        priority: "medium",
+        createdAt: new Date("2025-01-01"),
+        updatedAt: new Date("2025-01-01"),
+      };
+      
+      mockAdapter.findTaskById.mockResolvedValue(mockTask);
+      mockAdapter.removeTask.mockRejectedValue(new Error("DB connection error"));
+      const taskRepo = createTaskRepository(mockAdapter);
+
+      const result = await taskRepo.remove("test-id");
+      expect(result.isErr()).toBe(true);
+      if (result.isErr()) {
+        const error = result.unwrapErr();
+        expect(error).toBeInstanceOf(TaskStorageError);
+        expect(error.message).toContain("Failed to delete task");
+      }
     });
   });
 });
