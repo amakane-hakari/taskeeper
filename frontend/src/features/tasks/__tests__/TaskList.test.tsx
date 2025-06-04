@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import tasksReducer, { Task } from '../tasksSlice';
 import { IntlProvider } from 'react-intl';
+import { BrowserRouter } from 'react-router-dom';
 import jaMessages from '@/i18n/locales/ja.json';
 
 const mockTasks: Task[] = [
@@ -33,11 +34,13 @@ describe('TaskList', () => {
     });
 
     render(
-      <IntlProvider messages={jaMessages} locale="ja">
-        <Provider store={store}>
-          <TaskList />
-        </Provider>
-      </IntlProvider>
+      <BrowserRouter>
+        <IntlProvider messages={jaMessages} locale="ja">
+          <Provider store={store}>
+            <TaskList />
+          </Provider>
+        </IntlProvider>
+      </BrowserRouter>
     );
 
     // データ取得中のローディング状態を確認

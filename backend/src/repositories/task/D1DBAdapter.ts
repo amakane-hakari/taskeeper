@@ -50,7 +50,7 @@ export const createD1DBAdapter = (d1db: D1Database): IDBAdapter => {
     const updateData: Partial<NewTask> = {};
     
     if (task.title !== undefined) updateData.title = task.title;
-    if (task.description !== undefined) updateData.description = task.description;
+    if ('description' in task) updateData.description = task.description ?? '';  // undefinedの場合も空文字列に変換
     if (task.dueDate !== undefined) updateData.dueDate = convertDateToString(task.dueDate);
     if (task.status !== undefined) updateData.status = task.status;
     if (task.priority !== undefined) updateData.priority = task.priority;

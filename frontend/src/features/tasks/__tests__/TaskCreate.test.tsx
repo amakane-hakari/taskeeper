@@ -1,24 +1,40 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TaskCreate } from '../TaskCreate';
-import tasksSlice from '../tasksSlice';
+import tasksReducer from '../tasksSlice';
+import { uiSlice } from '../../ui/uiSlice';
+import { counterSlice } from '../../counter/counterSlice';
 import { ThemeProvider } from '../../ui/components/ThemeProvider';
 
+// fetchをモック化
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 describe('TaskCreate', () => {
-  const mockStore = configureStore({
+  beforeEach(() => {
+    mockFetch.mockClear();
+  });
+
+  const createMockStore = () => configureStore({
     reducer: {
-      tasks: tasksSlice.reducer,
+      tasks: tasksReducer,
+      ui: uiSlice.reducer,
+      counter: counterSlice.reducer,
     },
   });
 
   const renderWithProviders = (component: React.ReactElement) => {
-    return render(
-      <Provider store={mockStore}>
-        <ThemeProvider>{component}</ThemeProvider>
-      </Provider>
-    );
+    const store = createMockStore();
+    return {
+      store,
+      ...render(
+        <Provider store={store}>
+          <ThemeProvider>{component}</ThemeProvider>
+        </Provider>
+      )
+    };
   };
 
   it('タスク作成フォームが正しくレンダリングされること', () => {
@@ -42,7 +58,22 @@ describe('TaskCreate', () => {
   });
 
   it('フォーム送信時に正しくタスクが作成されること', async () => {
-    renderWithProviders(<TaskCreate />);
+    // fetchモックの設定
+    const mockTask = {
+      id: '1',
+      title: 'テストタスク',
+      description: 'テスト説明',
+      dueDate: '2025-12-31',
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
+    
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockTask),
+    });
+
+    const { store } = renderWithProviders(<TaskCreate />);
     
     fireEvent.change(screen.getByLabelText('タイトル'), {
       target: { value: 'テストタスク' },
@@ -58,7 +89,7 @@ describe('TaskCreate', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      const state = mockStore.getState();
+      const state = store.getState();
       expect(state.tasks.tasks).toContainEqual(
         expect.objectContaining({
           title: 'テストタスク',
