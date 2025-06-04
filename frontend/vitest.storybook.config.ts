@@ -8,6 +8,10 @@ import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 
 import { storybookTest } from '@storybook/experimental-addon-test/vitest-plugin';
 
+// NOTE: For CI environments, ensure Playwright browsers are installed before running tests.
+// This is handled by the "pretest-storybook:ci" script in package.json.
+// For local development, run: npx playwright install chromium
+
 const dirname =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,8 +33,12 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      name: 'chromium',
-      provider: 'playwright'
+      provider: 'playwright',
+      instances: [
+        {
+          browser: 'chromium',
+        }
+      ]
     },
     setupFiles: ['.storybook/vitest.setup.ts'],
   },

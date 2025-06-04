@@ -34,7 +34,7 @@ jobs:
       run: npm run test:coverage -w frontend
 
     - name: Run Storybook tests
-      run: npm run test-storybook -w frontend
+      run: npm run test-storybook:ci -w frontend
 
     - name: Run backend tests
       run: npm run test:coverage -w backend
