@@ -11,7 +11,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --reporter=verbose",
     "db:generate": "drizzle-kit generate",
     "db:push": "wrangler d1 migrations apply DB",
     "db:studio": "drizzle-kit studio"
