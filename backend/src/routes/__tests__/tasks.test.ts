@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import { createTasksRouter } from '../tasks';
 import { createMockTaskRepository } from '@/test/repositories/MockTaskRepository';
@@ -23,7 +23,22 @@ describe('Tasks API', () => {
   let diMiddleware: ReturnType<typeof createDIMiddleware>;
   let taskRepository: ReturnType<typeof createMockTaskRepository>;
 
+  let originalConsoleError: typeof console.error;
+
   beforeEach(() => {
+    // テスト用のエラーログを抑制
+    originalConsoleError = console.error;
+    console.error = vi.fn((message) => {
+      // 意図的なテストエラーは抑制（但し予期しないエラーは表示）
+      if (typeof message === 'string' && 
+          (message.includes('Error fetching tasks:') ||
+           message.includes('Error creating task:') ||
+           message.includes('Error deleting task:'))) {
+        return; // 抑制
+      }
+      originalConsoleError(message); // その他は表示
+    });
+
     taskRepository = createMockTaskRepository();
     diMiddleware = async (c, next) => {
       c.set('taskRepository', taskRepository);
@@ -33,6 +48,10 @@ describe('Tasks API', () => {
     app = new Hono();
     app.use('*', diMiddleware);
     app.route('/tasks', createTasksRouter());
+  });
+
+  afterEach(() => {
+    console.error = originalConsoleError;
   });
 
   describe('GET /tasks', () => {
